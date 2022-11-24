@@ -42,9 +42,9 @@ export class Cliente extends Entity {
 
   @property({
     type: 'string',
-    required: true,
+    required: false,
   })
-  clave: string;
+  clave?: string;
 
   @property({
     type: 'string',

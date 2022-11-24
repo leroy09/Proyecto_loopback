@@ -9,7 +9,6 @@ export class ClienteRepository extends DefaultCrudRepository<
   typeof Cliente.prototype.clienteid,
   ClienteRelations
 > {
-
   public readonly servicios: HasManyRepositoryFactory<Servicio, typeof Cliente.prototype.clienteid>;
 
   constructor(

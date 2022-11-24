@@ -1,25 +1,19 @@
-import {Entity, model, property} from '@loopback/repository';
+import {Model, model, property} from '@loopback/repository';
 
-@model({settings: {strict: false}})
-export class Credenciales extends Entity {
+@model()
+export class Credenciales extends Model {
   @property({
     type: 'string',
-    id: true,
-    generated: true,
+    required: true,
   })
-  usuario?: string;
+  user: string;
 
   @property({
     type: 'string',
     required: true,
   })
-  clave: string;
+  password: string;
 
-  // Define well-known properties here
-
-  // Indexer property to allow additional data
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [prop: string]: any;
 
   constructor(data?: Partial<Credenciales>) {
     super(data);

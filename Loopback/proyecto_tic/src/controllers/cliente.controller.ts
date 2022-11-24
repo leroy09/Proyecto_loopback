@@ -1,3 +1,4 @@
+import { service } from '@loopback/core';
 import {
   Count,
   CountSchema,
@@ -16,17 +17,27 @@ import {
   del,
   requestBody,
   response,
+  HttpErrors,
 } from '@loopback/rest';
-import {Cliente} from '../models';
+import { Keys } from '../config/keys';
+import {Cliente, Credenciales} from '../models';
 import {ClienteRepository} from '../repositories';
+import { AutenticacionService } from '../services';
+const fetch=require('node-fetch');
+/*import { RequestInfo, RequestInit } from 'node-fetch';
+
+const fetch = (url: RequestInfo, init?: RequestInit) =>
+  import('node-fetch').then(({ default: fetch }) => fetch(url, init));*/
 
 export class ClienteController {
   constructor(
     @repository(ClienteRepository)
     public clienteRepository : ClienteRepository,
+    @service(AutenticacionService)
+    public servicioAutenticacion : AutenticacionService
   ) {}
 
-  @post('/clientes')
+  @post('/registrocliente')
   @response(200, {
     description: 'Cliente model instance',
     content: {'application/json': {schema: getModelSchemaRef(Cliente)}},
@@ -44,7 +55,22 @@ export class ClienteController {
     })
     cliente: Omit<Cliente, 'clienteid'>,
   ): Promise<Cliente> {
-    return this.clienteRepository.create(cliente);
+    
+    let clave=this.servicioAutenticacion.GenerarClave();
+    let claveCifrada=this.servicioAutenticacion.CifrarClave(clave);
+    cliente.clave=claveCifrada;
+
+    let client=await this.clienteRepository.create(cliente); //create
+    //notificar usuario
+    let destino = cliente.email;
+    let asunto = 'Registro en la app';
+    let contenido = `Hola, ${cliente.nombre}, su usuario es: ${cliente.correo} y su clave es ${clave}`;
+    fetch(`${Keys.urlNotificaciones}/e-mail?email-destino=${destino}&asunto=${asunto}&mensaje=${contenido}`)
+    .then((data:any)=>{
+      console.log(data)
+    })
+
+    return client;
   }
 
   @get('/clientes/count')
@@ -146,5 +172,44 @@ export class ClienteController {
   })
   async deleteById(@param.path.string('id') id: string): Promise<void> {
     await this.clienteRepository.deleteById(id);
+  }
+      /* METODOS PROPIOS */
+
+  @post('/Login') //para probar crear usuario con registrarcliente y luego probar login
+    @response(200, {description: 'Identificacion de usuarios'})
+  async identificar(
+    @requestBody() credenciales:Credenciales 
+  ):Promise<Cliente | null>{
+    let cliente=await this.clienteRepository.findOne({ //findOne error no aparece en el repositorio
+      where:{
+        correo:credenciales.user,
+        clave:credenciales.password
+      }
+  });
+  return cliente;
+}
+
+  @post('/LoginToken')
+  @response(200, {
+    description: 'Identificacion personas con token'
+  })
+  async identificarConToken(
+    @requestBody()credenciales:Credenciales
+  ){
+    credenciales.password=this.servicioAutenticacion.CifrarClave(credenciales.password)
+    let p= await this.servicioAutenticacion.IdentificarPersona(credenciales)
+    if (p) {
+      let token=this.servicioAutenticacion.GenerarToken(p);
+      return{
+        datos:{
+          nombre: p.nombre,
+          correo: p.email,
+          id: p.clienteid //id?
+        },
+        tk:token
+      }
+    }else{
+      throw new HttpErrors[401]("Datos invalidos");
+    }
   }
 }
