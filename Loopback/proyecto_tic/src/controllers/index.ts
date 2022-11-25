@@ -16,3 +16,7 @@ export * from './directivo.controller';
 export * from './empleado.controller';
 export * from './notificaciones.controller';
 export * from './servicio.controller';
+export * from './servicio.controller';
+export * from './usuario-roles.controller';
+export * from './usuario.controller';
+export * from './roles.controller';

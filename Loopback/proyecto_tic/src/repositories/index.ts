@@ -4,3 +4,7 @@ export * from './directivo.repository';
 export * from './empleado.repository';
 export * from './notificaciones.repository';
 export * from './servicio.repository';
+export * from './servicio.repository';
+export * from './roles.repository';
+export * from './usuario.repository';
+export * from './rol-usuario.repository';

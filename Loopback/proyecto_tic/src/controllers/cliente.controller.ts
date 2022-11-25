@@ -204,7 +204,8 @@ export class ClienteController {
         datos:{
           nombre: p.nombre,
           correo: p.email,
-          id: p.clienteid //id?
+          id: p.clienteid,
+          clave: p.clave
         },
         tk:token
       }
